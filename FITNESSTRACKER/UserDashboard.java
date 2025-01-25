@@ -17,6 +17,7 @@ public class UserDashboard extends JPanel {
     private CardLayout cardLayout;
     private String username;
 
+
     public UserDashboard(String username) {
         this.username = username;
         
@@ -151,12 +152,188 @@ public class UserDashboard extends JPanel {
     }
 
     private JPanel createHomePage() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout());
-        JLabel label = new JLabel("Welcome, " + username + "! This is the Home page.", SwingConstants.CENTER);
-        label.setFont(new Font("Arial", Font.BOLD, 24));
-        panel.add(label, BorderLayout.CENTER);
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBackground(new Color(50, 50, 50));
+    
+        // Welcome Panel with Refresh Button
+        JPanel welcomePanel = new JPanel(new BorderLayout());
+        welcomePanel.setBackground(new Color(50, 50, 50));
+        welcomePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        JLabel welcomeLabel = new JLabel("Welcome, " + username + "!", SwingConstants.CENTER);
+        welcomeLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        welcomeLabel.setForeground(Color.WHITE);
+        
+        JButton refreshButton = new JButton("⟳ Refresh Dashboard");
+        refreshButton.setFocusPainted(false);
+        refreshButton.addActionListener(e -> refreshHomePage());
+        
+        welcomePanel.add(welcomeLabel, BorderLayout.CENTER);
+        welcomePanel.add(refreshButton, BorderLayout.EAST);
+        panel.add(welcomePanel, BorderLayout.NORTH);
+    
+        // Content Panel
+        contentPanel = new JPanel(new GridBagLayout());
+        contentPanel.setBackground(new Color(50, 50, 50));
+        refreshContentPanel();
+        
+        panel.add(new JScrollPane(contentPanel), BorderLayout.CENTER);
         return panel;
+    }
+    
+    private void refreshHomePage() {
+        refreshContentPanel();
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+    
+    private void refreshContentPanel() {
+        contentPanel.removeAll();
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.BOTH;
+    
+        // BMI Calculator Panel
+        JPanel bmiPanel = createBMICalculator();
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.gridwidth = 1;
+        contentPanel.add(bmiPanel, gbc);
+    
+        // Selected Trainer Info
+        JPanel trainerPanel = createSelectedTrainerInfo();
+        gbc.gridx = 1;
+        contentPanel.add(trainerPanel, gbc);
+    
+        // Stats Cards Panel
+        JPanel statsPanel = createStatsPanel();
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        contentPanel.add(statsPanel, gbc);
+    }
+    
+    
+    
+    private JPanel createBMICalculator() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBackground(new Color(60, 60, 60));
+        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+    
+        JLabel titleLabel = new JLabel("BMI Calculator");
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    
+        JTextField heightField = new JTextField(10);
+        heightField.setMaximumSize(new Dimension(150, 30));
+        JTextField weightField = new JTextField(10);
+        weightField.setMaximumSize(new Dimension(150, 30));
+    
+        JLabel bmiResultLabel = new JLabel("Your BMI: ");
+        bmiResultLabel.setForeground(Color.WHITE);
+        bmiResultLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    
+        JButton calculateButton = new JButton("Calculate BMI");
+        calculateButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        calculateButton.addActionListener(e -> {
+            try {
+                double height = Double.parseDouble(heightField.getText()) / 100; // cm to m
+                double weight = Double.parseDouble(weightField.getText());
+                double bmi = weight / (height * height);
+                bmiResultLabel.setText(String.format("Your BMI: %.2f", bmi));
+            } catch (NumberFormatException ex) {
+                bmiResultLabel.setText("Please enter valid numbers");
+            }
+        });
+    
+        panel.add(titleLabel);
+        panel.add(Box.createVerticalStrut(15));
+        panel.add(new JLabel("Height (cm):"));
+        panel.add(heightField);
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(new JLabel("Weight (kg):"));
+        panel.add(weightField);
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(calculateButton);
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(bmiResultLabel);
+    
+        return panel;
+    }
+    
+    private JPanel createSelectedTrainerInfo() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBackground(new Color(60, 60, 60));
+        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+    
+        JLabel titleLabel = new JLabel("Your Trainer");
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    
+        panel.add(titleLabel);
+        panel.add(Box.createVerticalStrut(15));
+    
+        int trainerId = getSelectedTrainerId(getUserId());
+        if (trainerId != -1) {
+            TrainerManager trainerManager = new TrainerManager();
+            TrainerManager.TrainerInfo trainer = trainerManager.getSelectedTrainer(getUserId());
+            if (trainer != null) {
+                addLabel(panel, "Name: " + trainer.fullname);
+                addLabel(panel, "Specialization: " + trainer.specialization);
+                addLabel(panel, "Experience: " + trainer.experience + " years");
+            }
+        } else {
+            JLabel noTrainerLabel = new JLabel("No trainer selected");
+            noTrainerLabel.setForeground(Color.WHITE);
+            noTrainerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            panel.add(noTrainerLabel);
+        }
+    
+        return panel;
+    }
+    
+    private void addLabel(JPanel panel, String text) {
+        JLabel label = new JLabel(text);
+        label.setForeground(Color.WHITE);
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(label);
+        panel.add(Box.createVerticalStrut(5));
+    }
+    
+    private JPanel createStatsPanel() {
+        JPanel panel = new JPanel(new GridLayout(1, 2, 10, 0));
+        panel.setBackground(new Color(50, 50, 50));
+    
+        // Add stats cards
+        panel.add(createStatsCard("Days Active", "0"));
+        panel.add(createStatsCard("Routines Completed", "0"));
+    
+        return panel;
+    }
+    private JPanel createStatsCard(String title, String value) {
+        JPanel card = new JPanel();
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBackground(new Color(60, 60, 60));
+        card.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        card.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+    
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    
+        JLabel valueLabel = new JLabel(value);
+        valueLabel.setForeground(Color.WHITE);
+        valueLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        valueLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    
+        card.add(titleLabel);
+        card.add(Box.createVerticalStrut(10));
+        card.add(valueLabel);
+    
+        return card;
     }
 
     private JPanel createProfilePage() {

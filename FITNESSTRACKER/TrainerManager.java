@@ -75,5 +75,34 @@ public class TrainerManager {
             return false;
         }
     }
+    public TrainerInfo getSelectedTrainer(int userId) {
+        String query = """
+            SELECT u.fullname, u.username, t.specialization, t.experience, t.trainer_id
+            FROM users u 
+            JOIN trainer t ON u.user_id = t.user_id
+            JOIN user_trainer ut ON t.trainer_id = ut.trainer_id
+            WHERE ut.user_id = ?
+        """;
+    
+        try (Connection conn = new DatabaseHandler().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            
+            pstmt.setInt(1, userId);
+            ResultSet rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                TrainerInfo trainer = new TrainerInfo();
+                trainer.trainerId = rs.getInt("trainer_id");
+                trainer.fullname = rs.getString("fullname");
+                trainer.username = rs.getString("username");
+                trainer.specialization = rs.getString("specialization");
+                trainer.experience = rs.getInt("experience");
+                return trainer;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
     
 }

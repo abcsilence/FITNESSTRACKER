@@ -1,17 +1,18 @@
 package FITNESSTRACKER;
 
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 
-public class UserDashboard extends JPanel {
+public class TrainerDashboard extends JPanel {
     private JPanel contentPanel;
     private JPanel cardPanel;
     private CardLayout cardLayout;
     private String username;
 
-    public UserDashboard(String username) {
+    public TrainerDashboard(String username) {
         this.username = username;
         
         // Main container with BorderLayout
@@ -52,7 +53,7 @@ public class UserDashboard extends JPanel {
         nameLabel.setFont(new Font("Arial", Font.BOLD, 16));
         userDetailsPanel.add(nameLabel);
 
-        JLabel statusLabel = new JLabel("User"); // Change to "Trainer" if applicable
+        JLabel statusLabel = new JLabel("Trainer"); // Change to "Trainer" if applicable
         statusLabel.setForeground(Color.LIGHT_GRAY);
         statusLabel.setFont(new Font("Arial", Font.PLAIN, 14));
         userDetailsPanel.add(statusLabel);
@@ -69,11 +70,9 @@ public class UserDashboard extends JPanel {
         JButton homeButton = createSidebarButton("Home");
         JButton profileButton = createSidebarButton("Profile");
         JButton routineButton = createSidebarButton("Routine");
-        JButton trainerButton = createSidebarButton("Trainer");
 
         buttonPanel.add(homeButton);
         buttonPanel.add(routineButton);
-        buttonPanel.add(trainerButton);
         buttonPanel.add(profileButton);
 
         sidebar.add(buttonPanel, BorderLayout.CENTER);
@@ -112,10 +111,7 @@ public class UserDashboard extends JPanel {
             cardLayout.show(cardPanel, "Routine");
             setSelectedButton(routineButton);
         });
-        trainerButton.addActionListener(e -> {
-            cardLayout.show(cardPanel, "Trainer");
-            setSelectedButton(trainerButton);
-        });
+      
     }
 
     private JButton createSidebarButton(String text) {
@@ -155,63 +151,11 @@ public class UserDashboard extends JPanel {
 
     private JPanel createProfilePage() {
         JPanel panel = new JPanel();
-        panel.setLayout(new GridBagLayout());
-        panel.setBackground(new Color(50, 50, 50));
-        
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        
-        // Fetch user details
-        UserProfile userProfile = new UserProfile(username);
-        
-        // Create form fields
-        JTextField fullnameField = new JTextField(userProfile.getFullname(), 20);
-        JTextField usernameField = new JTextField(userProfile.getUsername(), 20);
-        JTextField emailField = new JTextField(userProfile.getEmail(), 20);
-        JPasswordField passwordField = new JPasswordField(userProfile.getPassword(), 20);
-        
-        // Make username field read-only
-        usernameField.setEditable(false);
-        
-        // Add components with labels
-        addFormField(panel, "Full Name:", fullnameField, gbc, 0);
-        addFormField(panel, "Username:", usernameField, gbc, 1);
-        addFormField(panel, "Email:", emailField, gbc, 2);
-        addFormField(panel, "Password:", passwordField, gbc, 3);
-        
-        // Save button
-        JButton saveButton = new JButton("Save Changes");
-        gbc.gridy = 4;
-        gbc.gridx = 1;
-        panel.add(saveButton, gbc);
-        
-        saveButton.addActionListener(e -> {
-            String newFullname = fullnameField.getText().trim();
-            String newEmail = emailField.getText().trim();
-            String newPassword = new String(passwordField.getPassword()).trim();
-            
-            if (userProfile.updateProfile(newFullname, newEmail, newPassword)) {
-                JOptionPane.showMessageDialog(this, "Profile updated successfully!");
-            } else {
-                JOptionPane.showMessageDialog(this, "Failed to update profile!");
-            }
-        });
-        
+        panel.setLayout(new BorderLayout());
+        JLabel label = new JLabel("This is the Profile page.", SwingConstants.CENTER);
+        label.setFont(new Font("Arial", Font.BOLD, 24));
+        panel.add(label, BorderLayout.CENTER);
         return panel;
-    }
-    
-    private void addFormField(JPanel panel, String labelText, JTextField field, 
-                             GridBagConstraints gbc, int row) {
-        JLabel label = new JLabel(labelText);
-        label.setForeground(Color.WHITE);
-        
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        panel.add(label, gbc);
-        
-        gbc.gridx = 1;
-        panel.add(field, gbc);
     }
 
     private JPanel createRoutinePage() {
@@ -231,4 +175,4 @@ public class UserDashboard extends JPanel {
         panel.add(label, BorderLayout.CENTER);
         return panel;
     }
-}
+} 

@@ -37,7 +37,7 @@ public class FitnessTrackerApp {
         
         mainFrame.getContentPane().removeAll();
         if (isTrainer) {
-            // mainFrame.add(new TrainerDashboard(username));
+            mainFrame.add(new TrainerDashboard(username));
         } else {
             mainFrame.add(new UserDashboard(username));
         }

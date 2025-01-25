@@ -6,15 +6,12 @@ public class FitnessTrackerApp {
     private static JFrame mainFrame;
 
     public static void main(String[] args) {
-        // Initialize the application
         SwingUtilities.invokeLater(() -> {
             mainFrame = new JFrame("Fitness Tracker");
             mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             mainFrame.setSize(1000, 600);
             mainFrame.setLocationRelativeTo(null);
-
-            // Start with the Signup page
-            showSignupPage();
+            showLoginPage();
         });
     }
 
@@ -33,11 +30,19 @@ public class FitnessTrackerApp {
         mainFrame.repaint();
         mainFrame.setVisible(true);
     }
-    // public static void showDashboard(String username) {
-    //     mainFrame.getContentPane().removeAll();
-    //     mainFrame.add(new DashboardMainInterface(username).getMainPanel());
-    //     mainFrame.revalidate();
-    //     mainFrame.repaint();
-    //     mainFrame.setVisible(true);
-    // }
+
+    public static void showDashboard(String username) {
+        LoginHandler loginHandler = new LoginHandler();
+        boolean isTrainer = loginHandler.isTrainer(username);
+        
+        mainFrame.getContentPane().removeAll();
+        if (isTrainer) {
+            // mainFrame.add(new TrainerDashboard(username));
+        } else {
+            mainFrame.add(new UserDashboard(username));
+        }
+        mainFrame.revalidate();
+        mainFrame.repaint();
+        mainFrame.setVisible(true);
+    }
 }

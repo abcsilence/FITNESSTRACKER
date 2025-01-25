@@ -5,7 +5,7 @@ import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 
-public class UserDashboard extends JFrame {
+public class UserDashboard extends JPanel {
     private JPanel contentPanel;
     private JPanel cardPanel;
     private CardLayout cardLayout;
@@ -13,19 +13,16 @@ public class UserDashboard extends JFrame {
 
     public UserDashboard(String username) {
         this.username = username;
-        setTitle("User Dashboard");
-        setSize(800, 600);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
+        
         // Main container with BorderLayout
         setLayout(new BorderLayout());
+        setBackground(new Color(50, 50, 50));
 
         // Sidebar on the left
         JPanel sidebar = new JPanel();
         sidebar.setLayout(new BorderLayout());
         sidebar.setBackground(new Color(50, 50, 50)); // Darker background color
-        sidebar.setPreferredSize(new Dimension(250, getHeight())); // Increase the width of the sidebar
+        sidebar.setPreferredSize(new Dimension(250, 600)); // Set fixed width
 
         // User info panel at the top of the sidebar
         JPanel userInfoPanel = new JPanel();
@@ -40,7 +37,6 @@ public class UserDashboard extends JFrame {
         profilePicLabel.setPreferredSize(new Dimension(60, 60));
         userInfoPanel.add(profilePicLabel, BorderLayout.WEST);
 
-
         // Spacer region
         JPanel spacer = new JPanel();
         spacer.setBackground(new Color(50, 50, 50)); // Match the background color
@@ -50,24 +46,15 @@ public class UserDashboard extends JFrame {
         JPanel userDetailsPanel = new JPanel();
         userDetailsPanel.setLayout(new BoxLayout(userDetailsPanel, BoxLayout.Y_AXIS));
         userDetailsPanel.setBackground(new Color(50, 50, 50)); // Match the background color
-        userDetailsPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0)); // Add margin at the top
-
-        JLabel fullnameLabel = new JLabel("Roshan Jaishi");
-        fullnameLabel.setForeground(Color.LIGHT_GRAY);
-        fullnameLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-        fullnameLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-        userDetailsPanel.add(fullnameLabel);
 
         JLabel nameLabel = new JLabel(username);
         nameLabel.setForeground(Color.WHITE);
         nameLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        nameLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         userDetailsPanel.add(nameLabel);
 
-        JLabel statusLabel = new JLabel("user");
+        JLabel statusLabel = new JLabel("User"); // Change to "Trainer" if applicable
         statusLabel.setForeground(Color.LIGHT_GRAY);
         statusLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-        statusLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         userDetailsPanel.add(statusLabel);
 
         userInfoPanel.add(userDetailsPanel, BorderLayout.EAST);
@@ -108,7 +95,7 @@ public class UserDashboard extends JFrame {
         // Adding card panel to the center
         add(cardPanel, BorderLayout.CENTER);
 
-        // Set initial selected button
+        // Set initial selected button and show home page
         setSelectedButton(homeButton);
         cardLayout.show(cardPanel, "Home");
 
@@ -133,24 +120,11 @@ public class UserDashboard extends JFrame {
 
     private JButton createSidebarButton(String text) {
         JButton button = new JButton(text);
-        button.setPreferredSize(new Dimension(200, 40)); // Decrease the height of the buttons
-        button.setBackground(new Color(100, 100, 100)); // Normal button background color
-        button.setForeground(Color.LIGHT_GRAY); // Button text color
+        button.setPreferredSize(new Dimension(200, 40));
+        button.setBackground(new Color(100, 100, 100));
+        button.setForeground(Color.WHITE);
         button.setFocusPainted(false);
         button.setBorderPainted(false);
-
-        button.addFocusListener(new FocusListener() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                button.setForeground(Color.WHITE); // Change text color on focus
-            }
-
-            @Override
-            public void focusLost(FocusEvent e) {
-                button.setForeground(Color.LIGHT_GRAY); // Revert text color when focus is lost
-            }
-        });
-
         return button;
     }
 
@@ -160,9 +134,11 @@ public class UserDashboard extends JFrame {
             if (component instanceof JButton) {
                 JButton button = (JButton) component;
                 if (button == selectedButton) {
-                    button.setBackground(new Color(70, 130, 180)); // Selected button background color
+                    button.setBackground(new Color(70, 130, 180));
+                    button.setForeground(Color.WHITE);
                 } else {
-                    button.setBackground(new Color(100, 100, 100)); // Normal button background color
+                    button.setBackground(new Color(100, 100, 100));
+                    button.setForeground(Color.LIGHT_GRAY);
                 }
             }
         }
@@ -202,12 +178,5 @@ public class UserDashboard extends JFrame {
         label.setFont(new Font("Arial", Font.BOLD, 24));
         panel.add(label, BorderLayout.CENTER);
         return panel;
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            UserDashboard dashboard = new UserDashboard("roshan");
-            dashboard.setVisible(true);
-        });
     }
 }

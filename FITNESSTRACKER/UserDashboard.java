@@ -4,7 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-
+import java.util.List;
+import java.util.ArrayList;
 public class UserDashboard extends JPanel {
     private JPanel contentPanel;
     private JPanel cardPanel;
@@ -224,11 +225,72 @@ public class UserDashboard extends JPanel {
     }
 
     private JPanel createTrainerPage() {
+        System.out.println("Creating trainer page");
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
-        JLabel label = new JLabel("This is the Trainer page.", SwingConstants.CENTER);
-        label.setFont(new Font("Arial", Font.BOLD, 24));
-        panel.add(label, BorderLayout.CENTER);
+        panel.setBackground(new Color(50, 50, 50));
+    
+        // Header
+        JLabel headerLabel = new JLabel("Available Trainers", SwingConstants.CENTER);
+        headerLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        headerLabel.setForeground(Color.WHITE);
+        panel.add(headerLabel, BorderLayout.NORTH);
+    
+        // Trainers Grid
+        JPanel trainersGrid = new JPanel(new GridLayout(0, 2, 10, 10));
+        trainersGrid.setBackground(new Color(50, 50, 50));
+        trainersGrid.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    
+        TrainerManager trainerManager = new TrainerManager();
+        List<TrainerManager.TrainerInfo> trainers = trainerManager.getTrainers();
+        System.out.println("Retrieved trainers: " + trainers.size());
+    
+        if (trainers.isEmpty()) {
+            System.out.println("No trainers found!");
+            JLabel noTrainersLabel = new JLabel("No trainers available", SwingConstants.CENTER);
+            noTrainersLabel.setForeground(Color.WHITE);
+            panel.add(noTrainersLabel, BorderLayout.CENTER);
+        } else {
+            for (TrainerManager.TrainerInfo trainer : trainers) {
+                System.out.println("Adding trainer card for: " + trainer.fullname);
+                trainersGrid.add(createTrainerCard(trainer));
+            }
+            JScrollPane scrollPane = new JScrollPane(trainersGrid);
+            scrollPane.setBorder(null);
+            scrollPane.getViewport().setBackground(new Color(50, 50, 50));
+            panel.add(scrollPane, BorderLayout.CENTER);
+        }
+    
         return panel;
+    }
+    
+    private JPanel createTrainerCard(TrainerManager.TrainerInfo trainer) {
+        JPanel card = new JPanel();
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBackground(new Color(60, 60, 60));
+        card.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        card.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    
+        addLabel(card, "Name: " + trainer.fullname, Font.BOLD, 16);
+        addLabel(card, "Username: " + trainer.username, Font.PLAIN, 14);
+        addLabel(card, "Specialization: " + trainer.specialization, Font.PLAIN, 14);
+        addLabel(card, "Experience: " + trainer.experience + " years", Font.PLAIN, 14);
+    
+        JButton selectButton = new JButton("Select Trainer");
+        selectButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        selectButton.setMaximumSize(new Dimension(150, 30));
+        card.add(Box.createVerticalStrut(10));
+        card.add(selectButton);
+    
+        return card;
+    }
+    
+    private void addLabel(JPanel panel, String text, int fontStyle, int fontSize) {
+        JLabel label = new JLabel(text);
+        label.setForeground(Color.WHITE);
+        label.setFont(new Font("Arial", fontStyle, fontSize));
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(label);
+        panel.add(Box.createVerticalStrut(5));
     }
 }

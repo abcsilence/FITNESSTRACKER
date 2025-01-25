@@ -270,15 +270,28 @@ private JPanel createClientsTable() {
 
 
 private int getTotalClients() {
-    String query = "SELECT COUNT(*) FROM user_trainer WHERE trainer_id = ?";
+    String query = """
+        SELECT COUNT(*) 
+        FROM user_trainer ut
+        WHERE ut.trainer_id = (SELECT trainer_id FROM trainer WHERE user_id = ?)
+    """;
+    
     try (Connection conn = new DatabaseHandler().getConnection();
          PreparedStatement pstmt = conn.prepareStatement(query)) {
-        pstmt.setInt(1, getUserId());
+        
+        int userId = getUserId();
+        System.out.println("Getting clients for user ID: " + userId); // Debug
+        
+        pstmt.setInt(1, userId);
         ResultSet rs = pstmt.executeQuery();
+        
         if (rs.next()) {
-            return rs.getInt(1);
+            int count = rs.getInt(1);
+            System.out.println("Found " + count + " clients"); // Debug
+            return count;
         }
     } catch (SQLException e) {
+        System.err.println("Error getting total clients: " + e.getMessage());
         e.printStackTrace();
     }
     return 0;
@@ -302,31 +315,37 @@ private int getTotalRoutines() {
 private Object[][] getClientsData() {
     List<Object[]> clientsList = new ArrayList<>();
     String query = """
-        SELECT u.fullname, 
-               CASE WHEN r.user_id IS NULL THEN 'No Routine' ELSE 'Has Routine' END as status,
-               COALESCE(MAX(r.last_updated), 'Never') as last_updated
+        SELECT u.fullname, u.username,
+               CASE WHEN r.user_id IS NULL THEN 'No Routine' ELSE 'Has Routine' END as status
         FROM user_trainer ut
         JOIN users u ON ut.user_id = u.user_id
         LEFT JOIN routine r ON u.user_id = r.user_id
-        WHERE ut.trainer_id = ?
-        GROUP BY u.user_id, u.fullname
+        WHERE ut.trainer_id = (SELECT trainer_id FROM trainer WHERE user_id = ?)
     """;
 
     try (Connection conn = new DatabaseHandler().getConnection();
          PreparedStatement pstmt = conn.prepareStatement(query)) {
-        pstmt.setInt(1, getUserId());
+        
+        int userId = getUserId();
+        System.out.println("Getting clients data for user ID: " + userId); // Debug
+        
+        pstmt.setInt(1, userId);
         ResultSet rs = pstmt.executeQuery();
+        
         while (rs.next()) {
-            clientsList.add(new Object[]{
-                rs.getString("fullname"),
-                rs.getString("status"),
-                rs.getString("last_updated")
-            });
+            String fullname = rs.getString("fullname");
+            String username = rs.getString("username");
+            String status = rs.getString("status");
+            System.out.println("Found client: " + fullname); // Debug
+            
+            clientsList.add(new Object[]{fullname, username, status});
         }
     } catch (SQLException e) {
+        System.err.println("Error getting clients data: " + e.getMessage());
         e.printStackTrace();
     }
 
+    System.out.println("Total clients found: " + clientsList.size()); // Debug
     return clientsList.toArray(new Object[0][]);
 }
 

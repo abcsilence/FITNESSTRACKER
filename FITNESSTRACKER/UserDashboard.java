@@ -4,7 +4,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 import java.util.ArrayList;
 public class UserDashboard extends JPanel {
     private JPanel contentPanel;
@@ -216,13 +221,154 @@ public class UserDashboard extends JPanel {
     }
 
     private JPanel createRoutinePage() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout());
-        JLabel label = new JLabel("This is the Routine page.", SwingConstants.CENTER);
-        label.setFont(new Font("Arial", Font.BOLD, 24));
-        panel.add(label, BorderLayout.CENTER);
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(50, 50, 50));
+    
+        // Create header panel with refresh button
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(new Color(50, 50, 50));
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        JLabel titleLabel = new JLabel("Your Routine", SwingConstants.CENTER);
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        
+        JButton refreshButton = new JButton("⟳ Refresh");
+        refreshButton.setFocusPainted(false);
+        refreshButton.addActionListener(e -> refreshRoutinePage());
+        
+        headerPanel.add(titleLabel, BorderLayout.CENTER);
+        headerPanel.add(refreshButton, BorderLayout.EAST);
+        panel.add(headerPanel, BorderLayout.NORTH);
+    
+        // Get selected trainer's routines
+        int trainerId = getSelectedTrainerId(getUserId());
+        
+        if (trainerId == -1) {
+            // No trainer selected
+            JLabel noTrainerLabel = new JLabel("Please select a trainer first!", SwingConstants.CENTER);
+            noTrainerLabel.setForeground(Color.WHITE);
+            noTrainerLabel.setFont(new Font("Arial", Font.BOLD, 16));
+            panel.add(noTrainerLabel, BorderLayout.CENTER);
+            return panel;
+        }
+    
+        // Create grid for routine display
+        JPanel routinesGrid = new JPanel(new GridLayout(0, 3, 10, 10));
+        routinesGrid.setBackground(new Color(50, 50, 50));
+        routinesGrid.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    
+        // Get trainer's routines
+        List<RoutineManager.RoutineInfo> routines = getTrainerRoutines(trainerId);
+        
+        // Create a card for each day
+        String[] days = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+        for (String day : days) {
+            JPanel dayCard = createDayCard(day, routines);
+            routinesGrid.add(dayCard);
+        }
+    
+        JScrollPane scrollPane = new JScrollPane(routinesGrid);
+        scrollPane.setBorder(null);
+        scrollPane.getViewport().setBackground(new Color(50, 50, 50));
+        panel.add(scrollPane, BorderLayout.CENTER);
+    
         return panel;
     }
+    private void refreshRoutinePage() {
+        // Remove existing routine page
+        for (Component comp : cardPanel.getComponents()) {
+            if ("Routine".equals(comp.getName())) {
+                cardPanel.remove(comp);
+                break;
+            }
+        }
+        
+        // Create and add new routine page
+        JPanel routinePage = createRoutinePage();
+        routinePage.setName("Routine");
+        cardPanel.add(routinePage, "Routine");
+        
+        // Show updated page
+        cardLayout.show(cardPanel, "Routine");
+        cardPanel.revalidate();
+        cardPanel.repaint();
+    }
+
+private int getSelectedTrainerId(int userId) {
+    String query = "SELECT trainer_id FROM user_trainer WHERE user_id = ?";
+    try (Connection conn = new DatabaseHandler().getConnection();
+         PreparedStatement pstmt = conn.prepareStatement(query)) {
+        
+        pstmt.setInt(1, userId);
+        ResultSet rs = pstmt.executeQuery();
+        
+        if (rs.next()) {
+            return rs.getInt("trainer_id");
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return -1;
+}
+
+private List<RoutineManager.RoutineInfo> getTrainerRoutines(int trainerId) {
+    String query = """
+        SELECT r.* 
+        FROM routine r 
+        JOIN trainer t ON r.user_id = t.user_id 
+        WHERE t.trainer_id = ?
+    """;
+    
+    List<RoutineManager.RoutineInfo> routines = new ArrayList<>();
+    try (Connection conn = new DatabaseHandler().getConnection();
+         PreparedStatement pstmt = conn.prepareStatement(query)) {
+        
+        pstmt.setInt(1, trainerId);
+        ResultSet rs = pstmt.executeQuery();
+        
+        while (rs.next()) {
+            RoutineManager.RoutineInfo routine = new RoutineManager.RoutineInfo();
+            routine.day = rs.getString("day");
+            routine.workout = rs.getString("workout");
+            routine.caloriesBurned = rs.getString("calories_burned");
+            routines.add(routine);
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return routines;
+}
+
+private JPanel createDayCard(String day, List<RoutineManager.RoutineInfo> routines) {
+    JPanel card = new JPanel();
+    card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+    card.setBackground(new Color(60, 60, 60));
+    card.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+    card.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+    // Day header
+    JLabel dayLabel = new JLabel(day);
+    dayLabel.setForeground(Color.WHITE);
+    dayLabel.setFont(new Font("Arial", Font.BOLD, 16));
+    dayLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    card.add(dayLabel);
+    card.add(Box.createVerticalStrut(10));
+
+    // Find routine for this day
+    Optional<RoutineManager.RoutineInfo> dayRoutine = routines.stream()
+        .filter(r -> r.day.equals(day))
+        .findFirst();
+
+    if (dayRoutine.isPresent()) {
+        addLabel(card, "Workout: " + dayRoutine.get().workout, Font.PLAIN, 14);
+        addLabel(card, "Calories: " + dayRoutine.get().caloriesBurned, Font.PLAIN, 14);
+    } else {
+        addLabel(card, "No routine set", Font.ITALIC, 14);
+    }
+
+    return card;
+}
 
     private JPanel createTrainerPage() {
         System.out.println("Creating trainer page");
@@ -265,25 +411,53 @@ public class UserDashboard extends JPanel {
     }
     
     private JPanel createTrainerCard(TrainerManager.TrainerInfo trainer) {
-        JPanel card = new JPanel();
-        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setBackground(new Color(60, 60, 60));
-        card.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        card.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    JPanel card = new JPanel();
+    card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+    card.setBackground(new Color(60, 60, 60));
+    card.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+
+    addLabel(card, "Name: " + trainer.fullname, Font.BOLD, 16);
+    addLabel(card, "Username: " + trainer.username, Font.PLAIN, 14);
+    addLabel(card, "Specialization: " + trainer.specialization, Font.PLAIN, 14);
+    addLabel(card, "Experience: " + trainer.experience + " years", Font.PLAIN, 14);
+
+    JButton selectButton = new JButton("Select Trainer");
+    selectButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+    selectButton.setMaximumSize(new Dimension(150, 30));
     
-        addLabel(card, "Name: " + trainer.fullname, Font.BOLD, 16);
-        addLabel(card, "Username: " + trainer.username, Font.PLAIN, 14);
-        addLabel(card, "Specialization: " + trainer.specialization, Font.PLAIN, 14);
-        addLabel(card, "Experience: " + trainer.experience + " years", Font.PLAIN, 14);
-    
-        JButton selectButton = new JButton("Select Trainer");
-        selectButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        selectButton.setMaximumSize(new Dimension(150, 30));
-        card.add(Box.createVerticalStrut(10));
-        card.add(selectButton);
-    
-        return card;
+    selectButton.addActionListener(e -> {
+        int userId = getUserId();
+        TrainerManager trainerManager = new TrainerManager();
+        
+        if (trainerManager.selectTrainer(userId, trainer.trainerId)) {
+            JOptionPane.showMessageDialog(this, "Trainer selected successfully!");
+        } else {
+            JOptionPane.showMessageDialog(this, "Failed to select trainer!");
+        }
+    });
+
+    card.add(Box.createVerticalStrut(10));
+    card.add(selectButton);
+
+    return card;
+}
+
+private int getUserId() {
+    String query = "SELECT user_id FROM users WHERE username = ?";
+    try (Connection conn = new DatabaseHandler().getConnection();
+         PreparedStatement pstmt = conn.prepareStatement(query)) {
+        
+        pstmt.setString(1, username);
+        ResultSet rs = pstmt.executeQuery();
+        
+        if (rs.next()) {
+            return rs.getInt("user_id");
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
     }
+    return -1;
+}
     
     private void addLabel(JPanel panel, String text, int fontStyle, int fontSize) {
         JLabel label = new JLabel(text);

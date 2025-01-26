@@ -307,8 +307,8 @@ public class UserDashboard extends JPanel {
         panel.setBackground(new Color(50, 50, 50));
     
         // Add stats cards
-        panel.add(createStatsCard("Days Active", "0"));
-        panel.add(createStatsCard("Routines Completed", "0"));
+        // panel.add(createStatsCard("Days Active", "0"));
+        // panel.add(createStatsCard("Routines Completed", "0"));
     
         return panel;
     }

@@ -1,6 +1,6 @@
 package FITNESSTRACKER;
 
-// simran file updated in this file 
+// simran file updated in this file there
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.FocusEvent;
